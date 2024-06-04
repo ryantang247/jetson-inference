@@ -102,7 +102,17 @@ def is_sitting_leaned(pose):
         )
     else:
         return -1
-
+    font = cudaFont(size=32)
+    font.OverlayText(
+        img,
+        img.width,
+        img.height,
+        slanted_angle,
+        5,
+        50,
+        font.White,
+        font.Gray40,
+    )
     if slanted_angle < 70:
         return 2
     elif slanted_angle > 110:
