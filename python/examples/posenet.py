@@ -75,19 +75,31 @@ def is_sitting_leaned(pose):
 
     left_hip_idx = pose.FindKeypoint("left_hip")
     right_hip_idx = pose.FindKeypoint("right_hip")
+    left_ear_idx = pose.FindKeypoint("left_ear")
+    right_ear_idx = pose.FindKeypoint("right_ear")
     neck_idx = pose.FindKeypoint("neck")
 
-    if left_hip_idx < 0 or right_hip_idx < 0 or neck_idx < 0:
+    if (
+        left_hip_idx < 0
+        or right_hip_idx < 0
+        or neck_idx < 0
+        or right_ear_idx < 0
+        or left_ear_idx < 0
+    ):
         return False  # If any keypoint is missing, cannot determine
 
     left_hip = pose.Keypoints[left_hip_idx]
     right_hip = pose.Keypoints[right_hip_idx]
+    left_ear = pose.Keypoints[left_ear_idx]
+    right_ear = pose.Keypoints[right_ear_idx]
     neck = pose.Keypoints[neck_idx]
 
-    if left_hip_idx:
-        slanted_angle = angle_between(left_hip.x, neck.x, left_hip.y, neck.y)
-    elif right_hip:
-        slanted_angle = angle_between(right_hip.x, neck.x, right_hip.y, neck.y)
+    if left_hip and left_ear:
+        slanted_angle = angle_between(left_hip.x, left_ear.x, left_hip.y, left_ear.y)
+    elif right_hip and right_ear:
+        slanted_angle = angle_between(
+            right_hip.x, right_ear.x, right_hip.y, right_ear.y
+        )
     else:
         return -1
 
@@ -217,7 +229,7 @@ while True:
                 img.height,
                 "Leaning forwards!!",
                 5,
-                10,
+                30,
                 font.White,
                 font.Gray40,
             )
@@ -228,7 +240,7 @@ while True:
                 img.height,
                 "Leaning backwards!!",
                 5,
-                10,
+                30,
                 font.White,
                 font.Gray40,
             )
@@ -239,7 +251,7 @@ while True:
                 img.height,
                 "Not leaning!",
                 5,
-                10,
+                30,
                 font.White,
                 font.Gray40,
             )
@@ -250,7 +262,7 @@ while True:
                 img.height,
                 "Cannot detect",
                 5,
-                10,
+                30,
                 font.White,
                 font.Gray40,
             )
