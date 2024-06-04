@@ -23,6 +23,7 @@
 
 import sys
 import argparse
+import math
 
 from jetson_inference import poseNet
 from jetson_utils import videoSource, videoOutput, Log
@@ -57,6 +58,18 @@ parser.add_argument(
 )
 
 
+def angle_between(x1, x2, y1, y2):
+    dx = x2 - x1
+    dy = y2 - y1
+    # Use math.atan2 for robust calculation of angle in all quadrants
+    rad = math.atan2(dy, dx)
+
+    # Convert radians to degrees and ensure the angle is within the 0 to 360 range
+    angle_in_degrees = math.degrees(rad) % 360
+
+    return angle_in_degrees
+
+
 def is_sitting_slanted(pose):
     # Extract relevant keypoints
     left_shoulder_idx = pose.FindKeypoint("left_shoulder")
@@ -84,27 +97,21 @@ def is_sitting_slanted(pose):
     shoulder_slant = abs(left_shoulder.y - right_shoulder.y)
     hip_slant = abs(left_hip.y - right_hip.y)
 
-    # Define a threshold for slant detection
-    slant_threshold = (
-        10  # This threshold may need to be adjusted based on the scale of your images
-    )
+    if left_hip_idx:
+        slanted_angle = angle_between(left_hip, neck)
+    elif right_hip:
+        slanted_angle = angle_between(right_hip, neck)
+    else:
+        return -1
 
-    is_shoulder_slanted = shoulder_slant > slant_threshold
-    is_hip_slanted = hip_slant > slant_threshold
-
-    # Check vertical alignment of neck, shoulders, and hips
-    vertical_alignment = (
-        abs(neck.x - ((left_shoulder.x + right_shoulder.x) / 2)) < slant_threshold
-        and abs(
-            (left_shoulder.x + right_shoulder.x) / 2 - (left_hip.x + right_hip.x) / 2
-        )
-        < slant_threshold
-    )
-
-    # Determine if person is slanted
-    is_slanted = is_shoulder_slanted or is_hip_slanted or not vertical_alignment
-
-    return is_slanted
+    if slanted_angle < 70:
+        return 2
+    elif slanted_angle > 110:
+        return 1
+    elif 70 < slanted_angle < 110:
+        return 0
+    else:
+        return -1
 
 
 try:
@@ -140,11 +147,14 @@ while True:
         print(pose.Keypoints)
         isslanted = is_sitting_slanted(pose)
 
-        if isslanted:
-            print("Bad sitting posture!!!")
-        else:
+        if isslanted == 2:
+            print("Bad sitting posture!!! Leaning forward")
+        elif isslanted == 1:
+            print("Bad sitting posture!!! Leaning backwards")
+        elif isslanted == 0:
             print("Good sitting posture XD")
-        print("Links", pose.Links)
+        else:
+            print("Links", pose.Links)
 
     # render the image
     output.Render(img)
