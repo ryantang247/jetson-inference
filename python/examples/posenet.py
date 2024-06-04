@@ -28,25 +28,50 @@ from jetson_inference import poseNet
 from jetson_utils import videoSource, videoOutput, Log
 
 # parse the command line
-parser = argparse.ArgumentParser(description="Run pose estimation DNN on a video/image stream.", 
-                                 formatter_class=argparse.RawTextHelpFormatter, 
-                                 epilog=poseNet.Usage() + videoSource.Usage() + videoOutput.Usage() + Log.Usage())
+parser = argparse.ArgumentParser(
+    description="Run pose estimation DNN on a video/image stream.",
+    formatter_class=argparse.RawTextHelpFormatter,
+    epilog=poseNet.Usage() + videoSource.Usage() + videoOutput.Usage() + Log.Usage(),
+)
 
-parser.add_argument("input", type=str, default="", nargs='?', help="URI of the input stream")
-parser.add_argument("output", type=str, default="", nargs='?', help="URI of the output stream")
-parser.add_argument("--network", type=str, default="resnet18-body", help="pre-trained model to load (see below for options)")
-parser.add_argument("--overlay", type=str, default="links,keypoints", help="pose overlay flags (e.g. --overlay=links,keypoints)\nvalid combinations are:  'links', 'keypoints', 'boxes', 'none'")
-parser.add_argument("--threshold", type=float, default=0.15, help="minimum detection threshold to use") 
+parser.add_argument(
+    "input", type=str, default="", nargs="?", help="URI of the input stream"
+)
+parser.add_argument(
+    "output", type=str, default="", nargs="?", help="URI of the output stream"
+)
+parser.add_argument(
+    "--network",
+    type=str,
+    default="resnet18-body",
+    help="pre-trained model to load (see below for options)",
+)
+parser.add_argument(
+    "--overlay",
+    type=str,
+    default="links,keypoints",
+    help="pose overlay flags (e.g. --overlay=links,keypoints)\nvalid combinations are:  'links', 'keypoints', 'boxes', 'none'",
+)
+parser.add_argument(
+    "--threshold", type=float, default=0.15, help="minimum detection threshold to use"
+)
+
 
 def is_sitting_slanted(pose):
     # Extract relevant keypoints
-    left_shoulder_idx = pose.FindKeypoint('left_shoulder')
-    right_shoulder_idx = pose.FindKeypoint('right_shoulder')
-    left_hip_idx = pose.FindKeypoint('left_hip')
-    right_hip_idx = pose.FindKeypoint('right_hip')
-    neck_idx = pose.FindKeypoint('neck')
+    left_shoulder_idx = pose.FindKeypoint("left_shoulder")
+    right_shoulder_idx = pose.FindKeypoint("right_shoulder")
+    left_hip_idx = pose.FindKeypoint("left_hip")
+    right_hip_idx = pose.FindKeypoint("right_hip")
+    neck_idx = pose.FindKeypoint("neck")
 
-    if left_shoulder_idx < 0 or right_shoulder_idx < 0 or left_hip_idx < 0 or right_hip_idx < 0 or neck_idx < 0:
+    if (
+        left_shoulder_idx < 0
+        or right_shoulder_idx < 0
+        or left_hip_idx < 0
+        or right_hip_idx < 0
+        or neck_idx < 0
+    ):
         return False  # If any keypoint is missing, cannot determine
 
     left_shoulder = pose.Keypoints[left_shoulder_idx]
@@ -60,14 +85,21 @@ def is_sitting_slanted(pose):
     hip_slant = abs(left_hip.y - right_hip.y)
 
     # Define a threshold for slant detection
-    slant_threshold = 10  # This threshold may need to be adjusted based on the scale of your images
+    slant_threshold = (
+        10  # This threshold may need to be adjusted based on the scale of your images
+    )
 
     is_shoulder_slanted = shoulder_slant > slant_threshold
     is_hip_slanted = hip_slant > slant_threshold
 
     # Check vertical alignment of neck, shoulders, and hips
-    vertical_alignment = abs(neck.x - ((left_shoulder.x + right_shoulder.x) / 2)) < slant_threshold and \
-                         abs((left_shoulder.x + right_shoulder.x) / 2 - (left_hip.x + right_hip.x) / 2) < slant_threshold
+    vertical_alignment = (
+        abs(neck.x - ((left_shoulder.x + right_shoulder.x) / 2)) < slant_threshold
+        and abs(
+            (left_shoulder.x + right_shoulder.x) / 2 - (left_hip.x + right_hip.x) / 2
+        )
+        < slant_threshold
+    )
 
     # Determine if person is slanted
     is_slanted = is_shoulder_slanted or is_hip_slanted or not vertical_alignment
@@ -76,11 +108,11 @@ def is_sitting_slanted(pose):
 
 
 try:
-	args = parser.parse_known_args()[0]
+    args = parser.parse_known_args()[0]
 except:
-	print("")
-	parser.print_help()
-	sys.exit(0)
+    print("")
+    parser.print_help()
+    sys.exit(0)
 
 # load the pose estimation model
 net = poseNet(args.network, sys.argv, args.threshold)
@@ -94,8 +126,8 @@ while True:
     # capture the next image
     img = input.Capture()
 
-    if img is None: # timeout
-        continue  
+    if img is None:  # timeout
+        continue
 
     # perform pose estimation (with overlay)
     poses = net.Process(img, overlay=args.overlay)
@@ -112,14 +144,15 @@ while True:
             print("Bad sitting posture!!!")
         else:
             print("Good sitting posture XD")
-            
-        print('Links', pose.Links)
+        print("Links", pose.Links)
 
     # render the image
     output.Render(img)
 
     # update the title bar
-    output.SetStatus("{:s} | Network {:.0f} FPS".format(args.network, net.GetNetworkFPS()))
+    output.SetStatus(
+        "{:s} | Network {:.0f} FPS".format(args.network, net.GetNetworkFPS())
+    )
 
     # print out performance info
     net.PrintProfilerTimes()
