@@ -26,7 +26,7 @@ import argparse
 import math
 
 from jetson_inference import poseNet
-from jetson_utils import videoSource, videoOutput, Log
+from jetson_utils import videoSource, videoOutput, Log, cudaFont
 
 # parse the command line
 parser = argparse.ArgumentParser(
@@ -105,6 +105,7 @@ def is_sitting_slanted(pose):
         return -1
 
     print("Detected angle: %s", slanted_angle)
+
     if slanted_angle < 70:
         return 2
     elif slanted_angle > 110:
@@ -148,14 +149,58 @@ while True:
         print(pose.Keypoints)
         isslanted = is_sitting_slanted(pose)
 
+        font = cudaFont()
+
         if isslanted == 2:
+            font.OverlayText(
+                img,
+                img.Width,
+                img.height,
+                "Bad sitting posture!!! Leaning forward",
+                5,
+                5,
+                font.White,
+                font.Gray40,
+            )
             print("Bad sitting posture!!! Leaning forward")
         elif isslanted == 1:
+            font.OverlayText(
+                img,
+                img.Width,
+                img.height,
+                "Bad sitting posture!!! Leaning backwards",
+                5,
+                5,
+                font.White,
+                font.Gray40,
+            )
             print("Bad sitting posture!!! Leaning backwards")
         elif isslanted == 0:
+            font.OverlayText(
+                img,
+                img.Width,
+                img.height,
+                "Good sitting posture XD",
+                5,
+                5,
+                font.White,
+                font.Gray40,
+            )
             print("Good sitting posture XD")
         else:
-            print("Links", pose.Links)
+            font.OverlayText(
+                img,
+                img.Width,
+                img.height,
+                "Cannot detect",
+                5,
+                5,
+                font.White,
+                font.Gray40,
+            )
+            print("Cannot detect")
+
+        print("Links", pose.Links)
 
     # render the image
     output.Render(img)
