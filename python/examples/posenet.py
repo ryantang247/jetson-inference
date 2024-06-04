@@ -107,10 +107,12 @@ while True:
         print(pose)
         print(pose.Keypoints)
         isslanted = is_sitting_slanted(pose)
+
         if isslanted:
-             print("Bad sitting posture!!!")
+            print("Bad sitting posture!!!")
         else:
-             print("Good sitting posture XD")
+            print("Good sitting posture XD")
+            
         print('Links', pose.Links)
 
     # render the image
