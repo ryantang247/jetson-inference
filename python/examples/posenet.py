@@ -154,7 +154,7 @@ while True:
         if isslanted == 2:
             font.OverlayText(
                 img,
-                img.Width,
+                img.width,
                 img.height,
                 "Bad sitting posture!!! Leaning forward",
                 5,
@@ -166,7 +166,7 @@ while True:
         elif isslanted == 1:
             font.OverlayText(
                 img,
-                img.Width,
+                img.width,
                 img.height,
                 "Bad sitting posture!!! Leaning backwards",
                 5,
@@ -178,7 +178,7 @@ while True:
         elif isslanted == 0:
             font.OverlayText(
                 img,
-                img.Width,
+                img.width,
                 img.height,
                 "Good sitting posture XD",
                 5,
@@ -190,7 +190,7 @@ while True:
         else:
             font.OverlayText(
                 img,
-                img.Width,
+                img.width,
                 img.height,
                 "Cannot detect",
                 5,
