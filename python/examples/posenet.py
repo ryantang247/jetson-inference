@@ -200,7 +200,7 @@ while True:
 
     # print the pose results
     print("detected {:d} objects in image".format(len(poses)))
-
+    y_position = 0
     for pose in poses:
         print(pose)
         print(pose.Keypoints)
@@ -215,7 +215,7 @@ while True:
                 img.height,
                 "Bad sitting posture!!!",
                 5,
-                5,
+                5 + y_position,
                 font.White,
                 font.Gray40,
             )
@@ -227,23 +227,23 @@ while True:
                 img.height,
                 "Good sitting posture XD",
                 5,
-                5,
+                5 + y_position,
                 font.White,
                 font.Gray40,
             )
 
-        if isslanted == 2:
+        if isleaned == 2:
             font.OverlayText(
                 img,
                 img.width,
                 img.height,
                 "Leaning forwards!!",
                 5,
-                30,
+                30 + y_position,
                 font.White,
                 font.Gray40,
             )
-        elif isslanted == 1:
+        elif isleaned == 1:
             font.OverlayText(
                 img,
                 img.width,
@@ -254,14 +254,14 @@ while True:
                 font.White,
                 font.Gray40,
             )
-        elif isslanted == 0:
+        elif isleaned == 0:
             font.OverlayText(
                 img,
                 img.width,
                 img.height,
                 "Not leaning!",
                 5,
-                30,
+                30 + y_position,
                 font.White,
                 font.Gray40,
             )
@@ -272,11 +272,12 @@ while True:
                 img.height,
                 "Cannot detect",
                 5,
-                30,
+                30 + y_position,
                 font.White,
                 font.Gray40,
             )
 
+        y_position +=5
         print("Links", pose.Links)
 
     # render the image
