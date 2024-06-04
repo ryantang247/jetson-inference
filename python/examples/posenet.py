@@ -104,6 +104,7 @@ def is_sitting_slanted(pose):
     else:
         return -1
 
+    print("Detected angle: %s", slanted_angle)
     if slanted_angle < 70:
         return 2
     elif slanted_angle > 110:
