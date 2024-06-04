@@ -23,6 +23,7 @@
 
 import sys
 import argparse
+import math
 
 from jetson_inference import poseNet
 from jetson_utils import videoSource, videoOutput, Log, cudaFont
@@ -55,6 +56,49 @@ parser.add_argument(
 parser.add_argument(
     "--threshold", type=float, default=0.15, help="minimum detection threshold to use"
 )
+
+
+def angle_between(x1, x2, y1, y2):
+    dx = x2 - x1
+    dy = y2 - y1
+    # Use math.atan2 for robust calculation of angle in all quadrants
+    rad = math.atan2(dy, dx)
+
+    # Convert radians to degrees and ensure the angle is within the 0 to 360 range
+    angle_in_degrees = math.degrees(rad) % 360
+
+    return angle_in_degrees
+
+
+def is_sitting_leaned(pose):
+    # Extract relevant keypoints
+
+    left_hip_idx = pose.FindKeypoint("left_hip")
+    right_hip_idx = pose.FindKeypoint("right_hip")
+    neck_idx = pose.FindKeypoint("neck")
+
+    if left_hip_idx < 0 or right_hip_idx < 0 or neck_idx < 0:
+        return False  # If any keypoint is missing, cannot determine
+
+    left_hip = pose.Keypoints[left_hip_idx]
+    right_hip = pose.Keypoints[right_hip_idx]
+    neck = pose.Keypoints[neck_idx]
+
+    if left_hip_idx:
+        slanted_angle = angle_between(left_hip.x, neck.x, left_hip.y, neck.y)
+    elif right_hip:
+        slanted_angle = angle_between(right_hip.x, neck.x, right_hip.y, neck.y)
+    else:
+        return -1
+
+    if slanted_angle < 70:
+        return 2
+    elif slanted_angle > 110:
+        return 1
+    elif 70 < slanted_angle < 110:
+        return 0
+    else:
+        return -1
 
 
 def is_sitting_slanted(pose):
@@ -139,6 +183,7 @@ while True:
         print(pose)
         print(pose.Keypoints)
         isslanted = is_sitting_slanted(pose)
+        isleaned = is_sitting_leaned(pose)
         font = cudaFont(size=32)
 
         if isslanted:
@@ -146,13 +191,13 @@ while True:
                 img,
                 img.width,
                 img.height,
-                "Bad sitting posture!!! Leaning forward",
+                "Bad sitting posture!!!",
                 5,
                 5,
                 font.White,
                 font.Gray40,
             )
-            print("Bad sitting posture!!!")
+
         else:
             font.OverlayText(
                 img,
@@ -164,7 +209,52 @@ while True:
                 font.White,
                 font.Gray40,
             )
-            print("Good sitting posture XD")
+
+        if isslanted == 2:
+            font.OverlayText(
+                img,
+                img.width,
+                img.height,
+                "Leaning forwards!!",
+                5,
+                10,
+                font.White,
+                font.Gray40,
+            )
+        elif isslanted == 1:
+            font.OverlayText(
+                img,
+                img.width,
+                img.height,
+                "Leaning backwards!!",
+                5,
+                10,
+                font.White,
+                font.Gray40,
+            )
+        elif isslanted == 0:
+            font.OverlayText(
+                img,
+                img.width,
+                img.height,
+                "Not leaning!",
+                5,
+                10,
+                font.White,
+                font.Gray40,
+            )
+        else:
+            font.OverlayText(
+                img,
+                img.width,
+                img.height,
+                "Cannot detect",
+                5,
+                10,
+                font.White,
+                font.Gray40,
+            )
+
         print("Links", pose.Links)
 
     # render the image
