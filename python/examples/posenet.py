@@ -277,7 +277,7 @@ while True:
                 font.Gray40,
             )
 
-        y_position +=5
+        y_position += 5
         print("Links", pose.Links)
 
     # render the image
