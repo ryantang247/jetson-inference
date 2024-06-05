@@ -62,5 +62,14 @@ The experiment demonstrates the efficacy and practicality of deploying the appli
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/dusty-nv/jetson-inference
+   git clone https://github.com/ryantang247/jetson-inference
    cd jetson-inference
+
+2. **Go to project file**
+      ```bash
+   cd python
+   cd examples
+   
+3. **Run the project**
+      ```bash
+   python3 posenet.py
